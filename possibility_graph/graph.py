@@ -13,6 +13,7 @@ class Graph:
         if group_name not in self.groups:
             group = Group(group_name)
             self.groups[group_name] = group
+            return group
 
     def add_groups(self, group_names_list):
         for name in group_names_list:
@@ -33,8 +34,8 @@ class Graph:
 
     @staticmethod
     def get_triangle_nodes(node, other_node, third_group_name):
-        neighbours = node.edges[third_group_name]
-        other_neighbours = other_node.edges[third_group_name]
+        neighbours = node.edges.get(third_group_name, set())
+        other_neighbours = other_node.edges.get(third_group_name, set())
         return neighbours.intersection(other_neighbours)
 
     def cross_out_edge(self, node, other_node):
@@ -64,18 +65,30 @@ class Graph:
                         if group_name == g_n or other_group_name == g_n:
                             actual_group = g_n
                         else:
-                            third_group_name = g_n
+                            actual_pair_group = g_n
 
                     if actual_group == group_name:
                         actual_node = node
+                        out_node = other_node
                     else:
                         actual_node = other_node
+                        out_node = node
 
-                    rule_type = rule.edge_rules[edge]
-                    if rule_type == RuleType.Red and own_rule_type != RuleType.Pair:
-                        third_nodes = self.get_triangle_nodes(node, other_node, third_group_name)
-                        for third_node in third_nodes:
-                            removable_edges.append((actual_node, third_node))
+                    out_group = out_node.group.name
+
+                    other_rule_type = rule.edge_rules[edge]
+
+                    if other_rule_type == RuleType.Red and own_rule_type != RuleType.Pair:
+                        pair_nodes = self.get_triangle_nodes(node, other_node, actual_pair_group)
+                        for pair_node in pair_nodes:
+                            removable_edges.append((actual_node, pair_node))
+
+                    if other_rule_type == RuleType.Green:
+                        pair_nodes = self.get_triangle_nodes(node, other_node, actual_pair_group)
+                        for pair_node in pair_nodes:
+                            out_nodes = self.get_triangle_nodes(actual_node, pair_node, out_group)
+                            if len(out_nodes) == 0:
+                                removable_edges.append((actual_node, pair_node))
 
         return removable_edges
 

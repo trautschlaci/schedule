@@ -29,17 +29,16 @@ for i in range(1, sheet.nrows):
 
 
 exam_group = graph.get_group("Exam")
-exam_group.add_node("Test")
+exam_node = exam_group.add_node("Test")
 
-
-exam_node = exam_group.get_node("Test")
 major_node = major_group.get_node("BSc")
+#student_node = student_group.get_node("")
 
-for n in student_group.nodes.values():
-    graph.add_edge(n, exam_node)
+for s_n in student_group.nodes.values():
+    graph.add_edge(s_n, exam_node)
 
-for n in major_group.nodes.values():
-    graph.add_edge(n, exam_node)
+for m_n in major_group.nodes.values():
+    graph.add_edge(m_n, exam_node)
 
 edge_rules = {frozenset(["Exam", "Major"]): RuleType.Green,
               frozenset(["Student", "Major"]): RuleType.Pair,
@@ -48,6 +47,7 @@ edge_rules = {frozenset(["Exam", "Major"]): RuleType.Green,
 graph.add_rule(edge_rules)
 
 graph.cross_out_edge(exam_node, major_node)
+#graph.cross_out_edge(exam_node, student_node)
 
 print(exam_node.edges)
 
