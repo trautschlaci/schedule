@@ -19,5 +19,8 @@ class Group:
     def get_node(self, node_name: str) -> Node:
         return self.nodes[node_name]
 
+    def delete_node(self, node_name: str):
+        del self.nodes[node_name]
+
     def __repr__(self):
         return self.name

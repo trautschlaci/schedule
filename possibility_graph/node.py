@@ -16,7 +16,8 @@ class Node:
         self.edges[group_name].remove(other_node)
 
         if len(self.edges[group_name]) == 0:
-            print(f"{self.name} deleted")
+            pass
+            # print(f"All {group_name} deleted from {self.name}")
 
     def __repr__(self):
         return self.name

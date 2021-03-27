@@ -33,65 +33,133 @@ class Graph:
         other_node.delete_edge(node)
 
     @staticmethod
+    def delete_node(node):
+        node.group.delete_node(node)
+
+    @staticmethod
     def get_triangle_nodes(node, other_node, third_group_name):
         neighbours = node.edges.get(third_group_name, set())
         other_neighbours = other_node.edges.get(third_group_name, set())
         return neighbours.intersection(other_neighbours)
 
     def cross_out_edge(self, node, other_node):
+        if not self.edge_exists(node, other_node):
+            return
         self.delete_edge(node, other_node)
-        removable_edges = self.find_removable_edges(node, other_node)
-        self.cross_out_edges(removable_edges)
+        removable_list = self.find_removable_edges_or_nodes(node, other_node)
+        self.cross_out_edges_or_nodes(removable_list)
 
-    def cross_out_edges(self, removable_edges_list):
-        for edge in removable_edges_list:
-            node, other_node = edge
-            self.cross_out_edge(node, other_node)
+    def cross_out_node(self, node):
+        if not self.node_exists(node):
+            return
+        removable_list = []
+        for node_set in node.edges.values():
+            for other_node in node_set:
+                removable_list.append((node, other_node))
+        self.cross_out_edges_or_nodes(removable_list)
 
-    def find_removable_edges(self, node, other_node):
-        group_name = node.group.name
-        other_group_name = other_node.group.name
-        removable_edges = []
+    def cross_out_edges_or_nodes(self, removable_list):
+        for entity in removable_list:
+            if type(entity) == tuple:
+                node, other_node = entity
+                self.cross_out_edge(node, other_node)
+            else:
+                self.cross_out_node(entity)
+
+    def find_removable_edges_or_nodes(self, node1, node2):
+        group1 = node1.group.name
+        group2 = node2.group.name
+        removable_list = []
         for rule_number in self.rules:
             rule = self.rules[rule_number]
-            if group_name in rule.group_names and other_group_name in rule.group_names:
-                own_edge = frozenset([group_name, other_group_name])
-                own_rule_type = rule.edge_rules[own_edge]
-                for edge in rule.edge_rules:
-                    if edge == own_edge:
-                        continue
+            if group1 not in rule.group_names or group2 not in rule.group_names:
+                continue
 
-                    for g_n in edge:
-                        if group_name == g_n or other_group_name == g_n:
-                            actual_group = g_n
-                        else:
-                            actual_pair_group = g_n
+            group3 = rule.group_names.difference({group1, group2}).pop()
+            own_edge = frozenset([group1, group2])
+            own_rule_type = rule.edge_rules[own_edge]
 
-                    if actual_group == group_name:
-                        actual_node = node
-                        out_node = other_node
-                    else:
-                        actual_node = other_node
-                        out_node = node
+            for rule_edge in rule.edge_rules:
+                if rule_edge == own_edge:
+                    continue
 
-                    out_group = out_node.group.name
+                if group1 in rule_edge:
+                    common_node = node1
+                    out_node = node2
+                else:
+                    common_node = node2
+                    out_node = node1
 
-                    other_rule_type = rule.edge_rules[edge]
+                out_group = out_node.group.name
 
-                    if other_rule_type == RuleType.Red and own_rule_type != RuleType.Pair:
-                        pair_nodes = self.get_triangle_nodes(node, other_node, actual_pair_group)
-                        for pair_node in pair_nodes:
-                            removable_edges.append((actual_node, pair_node))
+                edge_rule_type = rule.edge_rules[rule_edge]
 
-                    if other_rule_type == RuleType.Green:
-                        pair_nodes = self.get_triangle_nodes(node, other_node, actual_pair_group)
-                        for pair_node in pair_nodes:
-                            out_nodes = self.get_triangle_nodes(actual_node, pair_node, out_group)
-                            if len(out_nodes) == 0:
-                                removable_edges.append((actual_node, pair_node))
+                if edge_rule_type == RuleType.Red and own_rule_type != RuleType.Pair:
+                    triangle_nodes = self.get_triangle_nodes(node1, node2, group3)
+                    for node3 in triangle_nodes:
+                        removable_list.append((common_node, node3))
 
-        return removable_edges
+                if edge_rule_type == RuleType.Green:
+                    triangle_nodes = self.get_triangle_nodes(node1, node2, group3)
+                    for node3 in triangle_nodes:
+                        out_nodes = self.get_triangle_nodes(common_node, node3, out_group)
+                        if len(out_nodes) == 0:
+                            removable_list.append((common_node, node3))
+
+            if own_rule_type == RuleType.Pair:
+                continue
+
+            for red_group in rule.node_rules:
+                if rule.node_rules[red_group] != RuleType.Red:
+                    continue
+
+                for pair_group in rule.group_names.difference({red_group}):
+                    edge_p_3 = frozenset([red_group, pair_group])
+                    if rule.edge_rules[edge_p_3] == RuleType.Pair:
+                        break
+
+                out_group = rule.group_names.difference({red_group, pair_group}).pop()
+
+                if group1 == red_group:
+                    red_nodes = {node1}
+                elif group2 == red_group:
+                    red_nodes = {node2}
+                else:
+                    red_nodes = self.get_triangle_nodes(node1, node2, group3)
+
+                for node in red_nodes:
+                    node_sets = []
+                    delete_node = False
+                    for neighbour in node.edges.get(pair_group, set()):
+                        out_nodes = self.get_triangle_nodes(node, neighbour, out_group)
+                        node_sets.append(out_nodes)
+                        if len(out_nodes) == 0:
+                            delete_node = True
+
+                    if delete_node is False and rule.node_rules.get(out_group, None) == RuleType.Pair:
+                        delete_node = not self.is_separable(node_sets)
+
+                    if delete_node:
+                        removable_list.append(node)
+
+        return removable_list
 
     def add_rule(self, edge_rules: Dict[FrozenSet[str], 'RuleType'], node_rules: Dict[str, 'RuleType'] = None):
         self.rules[self.rule_count] = Rule(edge_rules, node_rules)
         self.rule_count += 1
+
+    @staticmethod
+    def edge_exists(node, other_node):
+        return other_node in node.edges[other_node.group.name]
+
+    @staticmethod
+    def node_exists(node):
+        return node.name in node.group.nodes
+
+    @staticmethod
+    def is_separable(node_sets):
+        # TODO: Improve algorithm
+        all_nodes = set()
+        for node_set in node_sets:
+            all_nodes.update(node_set)
+        return len(all_nodes) >= len(node_sets)
