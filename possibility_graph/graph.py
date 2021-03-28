@@ -1,19 +1,21 @@
-from typing import FrozenSet, Dict
+from typing import FrozenSet, Dict, List
 from possibility_graph.group import Group
 from possibility_graph.rule import Rule, RuleType
 
 
 class Graph:
     def __init__(self):
-        self.groups = {}
-        self.rules = {}
-        self.rule_count = 0
+        self.groups: Dict[str, Group] = {}
+        self.rules: List[Rule] = []
+        self.infos: Dict[str, Dict[FrozenSet[str, str], ]] = {}
 
     def add_group(self, group_name: str):
-        if group_name not in self.groups:
-            group = Group(group_name)
-            self.groups[group_name] = group
-            return group
+        if group_name in self.groups:
+            return self.groups[group_name]
+
+        group = Group(group_name)
+        self.groups[group_name] = group
+        return group
 
     def add_groups(self, group_names_list):
         for name in group_names_list:
@@ -70,8 +72,7 @@ class Graph:
         group1 = node1.group.name
         group2 = node2.group.name
         removable_list = []
-        for rule_number in self.rules:
-            rule = self.rules[rule_number]
+        for rule in self.rules:
             if group1 not in rule.group_names or group2 not in rule.group_names:
                 continue
 
@@ -113,9 +114,11 @@ class Graph:
                 if rule.node_rules[red_group] != RuleType.Red:
                     continue
 
-                for pair_group in rule.group_names.difference({red_group}):
+                pair_group = ""
+                for g in rule.group_names.difference({red_group}):
                     edge_p_3 = frozenset([red_group, pair_group])
                     if rule.edge_rules[edge_p_3] == RuleType.Pair:
+                        pair_group = g
                         break
 
                 out_group = rule.group_names.difference({red_group, pair_group}).pop()
@@ -136,7 +139,7 @@ class Graph:
                         if len(out_nodes) == 0:
                             delete_node = True
 
-                    if delete_node is False and rule.node_rules.get(out_group, None) == RuleType.Pair:
+                    if delete_node is False and rule.node_rules.get(out_group, None) == RuleType.Distinct:
                         delete_node = not self.is_separable(node_sets)
 
                     if delete_node:
@@ -145,8 +148,7 @@ class Graph:
         return removable_list
 
     def add_rule(self, edge_rules: Dict[FrozenSet[str], 'RuleType'], node_rules: Dict[str, 'RuleType'] = None):
-        self.rules[self.rule_count] = Rule(edge_rules, node_rules)
-        self.rule_count += 1
+        self.rules.append(Rule(edge_rules, node_rules))
 
     @staticmethod
     def edge_exists(node, other_node):

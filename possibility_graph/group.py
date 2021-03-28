@@ -7,10 +7,12 @@ class Group:
         self.nodes = {}
 
     def add_node(self, node_name: str):
-        if node_name not in self.nodes:
-            node = Node(self, node_name)
-            self.nodes[node_name] = node
-            return node
+        if node_name in self.nodes:
+            return self.nodes[node_name]
+
+        node = Node(self, node_name)
+        self.nodes[node_name] = node
+        return node
 
     def add_nodes(self, nodes_names_list):
         for name in nodes_names_list:

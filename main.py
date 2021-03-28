@@ -1,83 +1,30 @@
 import xlrd
+from time import process_time
 from possibility_graph.graph import Graph
-from possibility_graph.rule import RuleType
+from dataloader.student_sheet_loader import load_student_sheet
+from dataloader.instructor_sheet_loader import load_instructor_sheet
+from dataloader.course_sheet_loader import load_course_sheet
+from dataloader.weak_group_generator import generate_weak_groups
+from dataloader.ruleloader import add_rules
 
-
-loc = "Input.xls"
-
-wb = xlrd.open_workbook(loc)
-sheet = wb.sheet_by_index(0)
+t1_start = process_time()
 
 graph = Graph()
-groups = ["Lecturer", "Exam", "Course", "Major", "Student", "Length", "Level", "Role", "Block", "Minute"]
-graph.add_groups(groups)
 
-"""student_group = graph.get_group("Student")
-neptun_list = sheet.col_values(1, 1)
-student_group.add_nodes(neptun_list)
+loc = "Input.xls"
+wb = xlrd.open_workbook(loc)
+student_sheet = wb.sheet_by_index(0)
+instructor_sheet = wb.sheet_by_index(1)
+course_sheet = wb.sheet_by_index(2)
 
-major_group = graph.get_group("Major")
-major_list = sheet.col_values(2, 1)
-major_group.add_nodes(major_list)
+load_student_sheet(graph, student_sheet)
+load_instructor_sheet(graph, instructor_sheet)
+load_course_sheet(graph, course_sheet)
+generate_weak_groups(graph)
+add_rules(graph)
 
-for i in range(1, sheet.nrows):
-    neptun_str = sheet.cell_value(i, 1)
-    major_str = sheet.cell_value(i, 2)
-    student_node = student_group.get_node(neptun_str)
-    major_node = major_group.get_node(major_str)
-    graph.add_edge(student_node, major_node)"""
+group = graph.get_group("Level")
 
+t1_stop = process_time()
 
-exam_group = graph.get_group("Exam")
-exam_node = exam_group.add_node("Test")
-
-"""for s_n in student_group.nodes.values():
-    graph.add_edge(s_n, exam_node)
-
-for m_n in major_group.nodes.values():
-    graph.add_edge(m_n, exam_node)"""
-
-edge_rules = {frozenset(["Exam", "Major"]): RuleType.Green,
-              frozenset(["Student", "Major"]): RuleType.Pair,
-              frozenset(["Exam", "Student"]): RuleType.Red}
-
-graph.add_rule(edge_rules)
-
-edge_rules = {frozenset(["Exam", "Role"]): RuleType.Pair,
-              frozenset(["Exam", "Lecturer"]): RuleType.Normal,
-              frozenset(["Lecturer", "Role"]): RuleType.Green}
-
-node_rules = {"Exam": RuleType.Red,
-              "Lecturer": RuleType.Pair}
-
-graph.add_rule(edge_rules, node_rules)
-
-
-role_group = graph.get_group("Role")
-role_node_1 = role_group.add_node("President")
-role_node_2 = role_group.add_node("Major")
-role_node_3 = role_group.add_node("Secretary")
-
-lecturer_group = graph.get_group("Lecturer")
-lecturer_node_1 = lecturer_group.add_node("A")
-lecturer_node_2 = lecturer_group.add_node("B")
-lecturer_node_3 = lecturer_group.add_node("C")
-lecturer_node_4 = lecturer_group.add_node("D")
-
-for r_n in role_group.nodes.values():
-    graph.add_edge(r_n, exam_node)
-
-for l_n in lecturer_group.nodes.values():
-    graph.add_edge(l_n, exam_node)
-
-graph.add_edge(role_node_1, lecturer_node_1)
-graph.add_edge(role_node_1, lecturer_node_2)
-graph.add_edge(role_node_2, lecturer_node_1)
-graph.add_edge(role_node_2, lecturer_node_2)
-graph.add_edge(role_node_3, lecturer_node_1)
-graph.add_edge(role_node_3, lecturer_node_2)
-graph.add_edge(role_node_1, lecturer_node_4)
-
-graph.cross_out_edge(lecturer_node_4, exam_node)
-
-print(exam_node.edges)
+print("Elapsed time:", t1_stop-t1_start)
