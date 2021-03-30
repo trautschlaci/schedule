@@ -45,3 +45,17 @@ def load_student_sheet(graph: Graph, sheet):
             graph.add_edge(student_node, course_node_2)
 
     return graph
+
+
+def cross_out_lengths(graph: Graph):
+    student_group = graph.get_group("Student")
+    length_group = graph.get_group("Length")
+
+    length_node_40 = length_group.get_node("40")
+    length_node_45 = length_group.get_node("45")
+
+    for student_node in student_group.nodes.values():
+        if len(student_node.edges["Course"]) == 2:
+            graph.cross_out_edge(student_node, length_node_40)
+        else:
+            graph.cross_out_edge(student_node, length_node_45)

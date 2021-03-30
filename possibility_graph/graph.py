@@ -36,7 +36,7 @@ class Graph:
 
     @staticmethod
     def delete_node(node):
-        node.group.delete_node(node)
+        node.group.delete_node(node.name)
 
     @staticmethod
     def get_triangle_nodes(node, other_node, third_group_name):
@@ -58,6 +58,7 @@ class Graph:
         for node_set in node.edges.values():
             for other_node in node_set:
                 removable_list.append((node, other_node))
+        self.delete_node(node)
         self.cross_out_edges_or_nodes(removable_list)
 
     def cross_out_edges_or_nodes(self, removable_list):
@@ -116,7 +117,7 @@ class Graph:
 
                 pair_group = ""
                 for g in rule.group_names.difference({red_group}):
-                    edge_p_3 = frozenset([red_group, pair_group])
+                    edge_p_3 = frozenset([red_group, g])
                     if rule.edge_rules[edge_p_3] == RuleType.Pair:
                         pair_group = g
                         break
@@ -132,17 +133,17 @@ class Graph:
 
                 for node in red_nodes:
                     node_sets = []
-                    delete_node = False
+                    do_delete_node = False
                     for neighbour in node.edges.get(pair_group, set()):
                         out_nodes = self.get_triangle_nodes(node, neighbour, out_group)
                         node_sets.append(out_nodes)
                         if len(out_nodes) == 0:
-                            delete_node = True
+                            do_delete_node = True
 
-                    if delete_node is False and rule.node_rules.get(out_group, None) == RuleType.Distinct:
-                        delete_node = not self.is_separable(node_sets)
+                    if do_delete_node is False and rule.node_rules.get(out_group, None) == RuleType.Distinct:
+                        do_delete_node = not self.is_separable(node_sets)
 
-                    if delete_node:
+                    if do_delete_node:
                         removable_list.append(node)
 
         return removable_list
@@ -165,3 +166,17 @@ class Graph:
         for node_set in node_sets:
             all_nodes.update(node_set)
         return len(all_nodes) >= len(node_sets)
+
+    def delete_group(self, group_name: str):
+        group = self.get_group(group_name)
+        while len(group.nodes) > 0:
+            node = group.nodes.popitem()[1]
+            for edge_type in node.edges.values():
+                while len(edge_type) > 0:
+                    edge_node = edge_type.pop()
+                    edge_node.delete_edge(node, False)
+
+        self.rules = [rule for rule in self.rules if group_name not in rule.group_names]
+        del self.groups[group_name]
+
+

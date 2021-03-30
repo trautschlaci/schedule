@@ -33,6 +33,7 @@ def load_instructor_sheet(graph: Graph, sheet):
             graph.add_edge(instructor_node, ee_node)
 
     minute_group = graph.add_group("Minute")
+    hour_group = graph.add_group("Hour")
 
     actual_day = ""
     for c in range(6, sheet.ncols):
@@ -40,12 +41,45 @@ def load_instructor_sheet(graph: Graph, sheet):
         if len(day_str) > 0:
             actual_day = day_str[:11]
 
-        hour_str = sheet.cell_value(1, c)[:-2]
+        hour_str = sheet.cell_value(1, c)
+        date_hour_str = f'{actual_day} {hour_str}'
+        hour_node = hour_group.add_node(date_hour_str)
+
+        for instructor_node in instructor_group.nodes.values():
+            graph.add_edge(instructor_node, hour_node)
+
         for i in range(12):
             minute = i*5
             minute_str = '%02d' % minute
-            date_str = f'{actual_day} {hour_str}{minute_str}'
+            date_str = f'{actual_day} {hour_str[:-2]}{minute_str}'
             date_node = minute_group.add_node(date_str)
+
+            graph.add_edge(hour_node, date_node)
 
             for instructor_node in instructor_group.nodes.values():
                 graph.add_edge(instructor_node, date_node)
+
+
+def cross_out_hours(graph: Graph, sheet):
+    hour_group = graph.get_group("Hour")
+    instructor_group = graph.get_group("Instructor")
+
+    for r in range(2, sheet.nrows):
+        name_str = sheet.cell_value(r, 0)
+        instructor_node = instructor_group.get_node(name_str)
+
+        actual_day = ""
+        for c in range(6, sheet.ncols):
+            day_str = sheet.cell_value(0, c)
+            if len(day_str) > 0:
+                actual_day = day_str[:11]
+
+            if sheet.cell_value(r, c) != 'x':
+                hour_str = sheet.cell_value(1, c)
+                date_hour_str = f'{actual_day} {hour_str}'
+                hour_node = hour_group.get_node(date_hour_str)
+
+                graph.cross_out_edge(instructor_node, hour_node)
+
+
+

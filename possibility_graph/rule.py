@@ -15,6 +15,9 @@ class Rule:
         if self.node_rules is None:
             self.node_rules = {}
 
+    def __repr__(self):
+        return self.group_names.__repr__()
+
 
 class RuleType(enum.Enum):
     Normal = 1
