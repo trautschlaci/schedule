@@ -9,11 +9,11 @@ class Graph:
         self.rules: List[Rule] = []
         self.infos: Dict[str, Dict[FrozenSet[str, str], ]] = {}
 
-    def add_group(self, group_name: str):
+    def add_group(self, group_name: str, is_weak_group=False):
         if group_name in self.groups:
             return self.groups[group_name]
 
-        group = Group(group_name)
+        group = Group(self, group_name, is_weak_group)
         self.groups[group_name] = group
         return group
 
@@ -37,6 +37,7 @@ class Graph:
     @staticmethod
     def delete_node(node):
         node.group.delete_node(node.name)
+        node.is_deleted = True
 
     @staticmethod
     def get_triangle_nodes(node, other_node, third_group_name):
@@ -153,6 +154,8 @@ class Graph:
 
     @staticmethod
     def edge_exists(node, other_node):
+        if other_node.group.name not in node.edges:
+            return False
         return other_node in node.edges[other_node.group.name]
 
     @staticmethod
@@ -171,12 +174,37 @@ class Graph:
         group = self.get_group(group_name)
         while len(group.nodes) > 0:
             node = group.nodes.popitem()[1]
-            for edge_type in node.edges.values():
-                while len(edge_type) > 0:
-                    edge_node = edge_type.pop()
+            for edge_set in node.edges.values():
+                while len(edge_set) > 0:
+                    edge_node = edge_set.pop()
                     edge_node.delete_edge(node, False)
 
         self.rules = [rule for rule in self.rules if group_name not in rule.group_names]
         del self.groups[group_name]
 
+    def merge_groups(self, main_group_name, sub_group_name):
+        main_group = self.groups[main_group_name]
+        for main_node in list(main_group.nodes.values()).copy():
+            removable_list = []
+            is_first = True
+            for sub_node in main_node.edges[sub_group_name]:
+                if is_first:
+                    clone_node = main_node
+                else:
+                    clone_name = f'{main_node.name} {sub_node.name}'
+                    clone_node = self.create_clone_node(main_node, clone_name)
 
+                for clone_sub_node in clone_node.edges[sub_group_name]:
+                    if clone_sub_node != sub_node:
+                        removable_list.append((clone_node, clone_sub_node))
+
+                is_first = False
+            self.cross_out_edges_or_nodes(removable_list)
+
+    def create_clone_node(self, node, clone_name):
+        group = node.group
+        clone_node = group.add_node(clone_name)
+        for node_set in node.edges.values():
+            for edge_node in node_set:
+                self.add_edge(edge_node, clone_node)
+        return clone_node

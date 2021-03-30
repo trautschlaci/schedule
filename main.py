@@ -31,15 +31,22 @@ cross_out_hours(graph, instructor_sheet)
 graph.delete_group("Hour")
 
 
+graph.merge_groups("Exam", "Major")
+graph.merge_groups("Block", "Major")
+graph.delete_group("Major")
+
+
 t1_stop = process_time()
 
 print("Elapsed time:", t1_stop-t1_start)
 
 group = graph.get_group("Student")
-s_sum = 0
-s_count = 0
+s_min = 1000
 for node in group.nodes.values():
-    s_count += 1
-    s_sum += len(node.edges["Exam"])
+    exam_count = len(node.edges["Exam"])
+    if exam_count < s_min:
+        s_min = exam_count
 
-print(s_sum/s_count)
+print(s_min)
+print(len(graph.get_group("Exam").nodes))
+print(len(graph.get_group("Block").nodes))

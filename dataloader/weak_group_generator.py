@@ -14,7 +14,7 @@ def generate_exams(graph: Graph):
         length = int(length_node.name)
         possible_lengths.append(length)
 
-    exam_group = graph.add_group("Exam")
+    exam_group = graph.add_group("Exam", True)
 
     generate_length_entities(graph, exam_group, possible_lengths)
 
@@ -59,7 +59,7 @@ def generate_blocks(graph: Graph):
     for i in range(min_exam_number, max_exam_number + 1):
         usable_block_lengths.update(block_lengths_dict[i])
 
-    block_group = graph.add_group("Block")
+    block_group = graph.add_group("Block", True)
 
     generate_length_entities(graph, block_group, usable_block_lengths, pm_block_min_start_time)
     generate_length_entities(graph, block_group, usable_block_lengths, max_end_time=am_block_max_end_time)

@@ -3,6 +3,7 @@ class Node:
         self.group = group
         self.name = name
         self.edges = {}
+        self.is_deleted = False
 
     def add_edge(self, other_node):
         other_group_name = other_node.group.name
@@ -16,8 +17,11 @@ class Node:
         self.edges[group_name].remove(other_node)
 
         if len(self.edges[group_name]) == 0:
-            if safe_delete:
-                print(f"All {group_name} deleted from {self.name}")
+            if not self.is_deleted and safe_delete:
+                if self.group.is_weak_group:
+                    self.group.graph.cross_out_node(self)
+                else:
+                    print(f"All {group_name} deleted from {self.name}")
             else:
                 del self.edges[group_name]
 

@@ -2,9 +2,11 @@ from possibility_graph.node import Node
 
 
 class Group:
-    def __init__(self, name: str):
+    def __init__(self, graph, name: str, is_weak_group=False):
+        self.graph = graph
         self.name = name
         self.nodes = {}
+        self.is_weak_group = is_weak_group
 
     def add_node(self, node_name: str):
         if node_name in self.nodes:
