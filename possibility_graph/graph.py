@@ -164,7 +164,6 @@ class Graph:
 
     @staticmethod
     def is_separable(node_sets):
-        # TODO: Improve algorithm
         all_nodes = set()
         for node_set in node_sets:
             all_nodes.update(node_set)
@@ -187,8 +186,10 @@ class Graph:
         for main_node in list(main_group.nodes.values()).copy():
             removable_list = []
             is_first = True
+            main_new_name = main_node.name
             for sub_node in main_node.edges[sub_group_name]:
                 if is_first:
+                    main_new_name = f'{main_node.name} {sub_node.name}'
                     clone_node = main_node
                 else:
                     clone_name = f'{main_node.name} {sub_node.name}'
@@ -199,6 +200,7 @@ class Graph:
                         removable_list.append((clone_node, clone_sub_node))
 
                 is_first = False
+            self.change_name(main_node, main_new_name)
             self.cross_out_edges_or_nodes(removable_list)
 
     def create_clone_node(self, node, clone_name):
@@ -208,3 +210,22 @@ class Graph:
             for edge_node in node_set:
                 self.add_edge(edge_node, clone_node)
         return clone_node
+
+    @staticmethod
+    def is_separable_strong(node_sets):
+        all_nodes = {frozenset()}
+        for i in range(len(node_sets)):
+            temp_nodes = set()
+            node_set = node_sets[i]
+            for previous_node_set in all_nodes:
+                for node in node_set:
+                    temp_set = previous_node_set.union([node])
+                    if len(temp_set) > i:
+                        temp_nodes.add(temp_set)
+            all_nodes = temp_nodes
+        return len(all_nodes) > 0
+
+    @staticmethod
+    def change_name(node, new_node_name):
+        node.group.nodes[new_node_name] = node.group.nodes.pop(node.name)
+        node.name = new_node_name

@@ -26,5 +26,9 @@ class Group:
     def delete_node(self, node_name: str):
         del self.nodes[node_name]
 
+    def add_edge_to_all_nodes(self, other_node):
+        for node in self.nodes.values():
+            self.graph.add_edge(node, other_node)
+
     def __repr__(self):
         return self.name

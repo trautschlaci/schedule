@@ -10,8 +10,7 @@ class Rule:
         for edge_rule in edge_rules:
             self.group_names.update(edge_rule)
         if len(self.group_names) > 3:
-            # TODO: normal handling
-            print("Error")
+            print("Invalid rule")
         if self.node_rules is None:
             self.node_rules = {}
 
