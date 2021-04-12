@@ -178,7 +178,7 @@ class Graph:
                     edge_node = edge_set.pop()
                     edge_node.delete_edge(node, False)
 
-        self.rules = [rule for rule in self.rules if group_name not in rule.group_names]
+        self.delete_rules_with_group(group_name)
         del self.groups[group_name]
 
     def merge_groups(self, main_group_name, sub_group_name):
@@ -212,7 +212,7 @@ class Graph:
         return clone_node
 
     @staticmethod
-    def is_separable_strong(node_sets):
+    def is_completely_separable(node_sets):
         all_nodes = {frozenset()}
         for i in range(len(node_sets)):
             temp_nodes = set()
@@ -229,3 +229,6 @@ class Graph:
     def change_name(node, new_node_name):
         node.group.nodes[new_node_name] = node.group.nodes.pop(node.name)
         node.name = new_node_name
+
+    def delete_rules_with_group(self, group_name):
+        self.rules = [rule for rule in self.rules if group_name not in rule.group_names]
