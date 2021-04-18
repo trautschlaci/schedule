@@ -1,0 +1,5 @@
+Load: 7.15625
+Adatbevitel: 19.8125
+Clone creation: 1.828125
+Összevonás: 58.984375
+
