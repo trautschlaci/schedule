@@ -1,6 +1,7 @@
 from typing import FrozenSet, Dict, List
 from possibility_graph.group import Group
 from possibility_graph.rule import Rule, RuleType
+from time import process_time
 
 
 class Graph:
@@ -8,6 +9,7 @@ class Graph:
         self.groups: Dict[str, Group] = {}
         self.rules: List[Rule] = []
         self.infos: Dict[str, Dict[FrozenSet[str, str], ]] = {}
+        self.t_merge_cross = 0
 
     def add_group(self, group_name: str, is_weak_group=False):
         if group_name in self.groups:
@@ -201,7 +203,11 @@ class Graph:
 
                 is_first = False
             self.change_name(main_node, main_new_name)
+
+            t1_start = process_time()
             self.cross_out_edges_or_nodes(removable_list)
+            t1_stop = process_time()
+            self.t_merge_cross += t1_stop-t1_start
 
     def create_clone_node(self, node, clone_name):
         group = node.group

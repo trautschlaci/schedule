@@ -16,7 +16,7 @@ graph.delete_group("Major")
 
 t1_stop = process_time()
 
-
-print("Calculation time:", t1_stop-t1_start)
+print("Clone creation time:", t1_stop-t1_start-graph.t_merge_cross)
+print("Merge cross-out time:", graph.t_merge_cross)
 print(len(graph.get_group("Exam").nodes))
 print(len(graph.get_group("Block").nodes))
