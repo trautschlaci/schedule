@@ -5,9 +5,12 @@ from dataloader.instructor_sheet_loader import load_instructor_sheet, cross_out_
 from dataloader.course_sheet_loader import load_course_sheet
 from dataloader.weak_group_generator import generate_weak_groups
 from dataloader.ruleloader import add_rules
+from time import process_time
 
 
 def load_data(excel_path):
+    t1_start = process_time()
+
     graph = Graph()
 
     wb = xlrd.open_workbook(excel_path)
@@ -22,10 +25,17 @@ def load_data(excel_path):
     generate_weak_groups(graph)
     add_rules(graph)
 
+    t1_stop = process_time()
+    print("Load time:", t1_stop - t1_start)
+    t1_start = process_time()
+
     cross_out_lengths(graph)
     graph.delete_group("Length")
 
     cross_out_hours(graph, instructor_sheet)
     graph.delete_group("Hour")
+
+    t1_stop = process_time()
+    print("Cross-out time:", t1_stop - t1_start)
 
     return graph

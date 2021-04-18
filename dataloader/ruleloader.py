@@ -59,13 +59,14 @@ def add_rules(graph):
 
     graph.add_rule(edge_rules)
 
+    # TODO: fix
     edge_rules = {frozenset(["Exam", "Block"]): RuleType.Normal,
                   frozenset(["Exam", "Minute"]): RuleType.Normal,
-                  frozenset(["Block", "Minute"]): RuleType.Pair}
+                  frozenset(["Block", "Minute"]): RuleType.Green}
 
     node_rules = {"Block": RuleType.Red}
 
-    graph.add_rule(edge_rules, node_rules)
+    graph.add_rule(edge_rules)
 
     edge_rules = {frozenset(["Instructor", "Minute"]): RuleType.Red,
                   frozenset(["Instructor", "Hour"]): RuleType.Normal,
