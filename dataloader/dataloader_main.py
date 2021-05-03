@@ -26,7 +26,7 @@ def load_data(excel_path):
     add_rules(graph)
 
     t1_stop = process_time()
-    print("Load time:", t1_stop - t1_start)
+    load_time = t1_stop - t1_start
     t1_start = process_time()
 
     cross_out_lengths(graph)
@@ -36,6 +36,6 @@ def load_data(excel_path):
     graph.delete_group("Hour")
 
     t1_stop = process_time()
-    print("Cross-out time:", t1_stop - t1_start)
+    cross_time = t1_stop - t1_start
 
-    return graph
+    return graph, load_time, cross_time
